@@ -1,18 +1,23 @@
 {
-  "name": "node-express-simple-boilerplate",
+  "name": "vortex-server",
   "version": "1.0.0",
-  "description": "Simple Node.js + Express boilerplate project.",
+  "description": "vortex-server",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "nodemon index.js"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.10.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.21.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^4.0.0"
   },
-  "author": "Omar Muscatello",
+  "author": "Aviral Gupta",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "nodemon": "^3.1.7"
   }
 }

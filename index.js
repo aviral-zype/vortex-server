@@ -1,7 +1,14 @@
-const express = require('express');
-const cors = require('cors');
+import express from "express";
+import { Resend } from "resend";
+import cors from 'cors'
+import { createPool } from '@vercel/postgres';
+
 
 const app = express();
+const resend = new Resend("re_amoy2sjc_E6woU4xYVPXU2K9Kk67PVN2H");
+const connectionStringP = "postgres://default:eAK0Dj3TnExo@ep-aged-field-a1vjagdu-pooler.ap-southeast-1.aws.neon.tech/verceldb?sslmode=require";
+
+
 app.use(cors());
 app.use(express.json());
 
@@ -14,6 +21,42 @@ app.get('/', (req, res) => {
 
   res.send('Hello World!<br>Param1 = ' + param1);
 });
+
+
+app.post("/submit", async (request, response) => {
+  const pool = createPool({
+    connectionString: connectionStringP,
+  });
+
+  const { name, phonenumber, email, description, country, message } = request.body;
+  const ip = request.ip;
+
+  try {
+    // Execute both tasks in parallel
+    const [insertResult, emailResult] = await Promise.all([
+      pool.sql`INSERT INTO Leads (name, phonenumber, email, description, country, ip) VALUES (${name}, ${phonenumber}, ${email}, ${description}, ${country}, ${ip});`,
+      resend.emails.send({
+        from: `Vortex Admin - ${name} <support@vortexio.tech>`,
+        to: "aviralgupta6@gmail.com",
+        subject: `Submission from ${name}`,
+        html: `<p>Hi Boss,</p><p>Following Data has been received from ${name}. Email: ${email}<br/><strong>message: ${message}</strong></p>`,
+      })
+    ]);
+
+    // Close the pool connection
+    await pool.end();
+
+    // Handle response for successful operations
+    response.status(200).json({
+      leadData: insertResult.data,
+      emailData: emailResult.data,
+    });
+  } catch (error) {
+    // Handle error from any of the operations
+    response.status(400).json({ error });
+  }
+});
+
 
 let nexPersonId = 3;
 const people = [
