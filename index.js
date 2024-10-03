@@ -43,7 +43,7 @@ app.post("/submit", async (request, response) => {
   }
 
   const { name, phonenumber, email, description, country, message, sessionIp } = request.body;
-  const ip = getIpFromRequest(request, sessionIp);
+  const ip = sessionIp || getIpFromRequest(request, sessionIp);
 
   try {
     // Execute both tasks in parallel
