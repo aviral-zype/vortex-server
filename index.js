@@ -1,12 +1,8 @@
 import express from "express";
-import { Resend } from "resend";
 import cors from 'cors'
-import { createPool } from '@vercel/postgres';
 
 
 const app = express();
-const resend = new Resend("re_amoy2sjc_E6woU4xYVPXU2K9Kk67PVN2H");
-const connectionStringP = "postgres://default:eAK0Dj3TnExo@ep-aged-field-a1vjagdu-pooler.ap-southeast-1.aws.neon.tech/verceldb?sslmode=require";
 
 
 app.use(cors());
@@ -23,53 +19,6 @@ app.get('/', (req, res) => {
 });
 
 
-app.post("/submit", async (request, response) => {
-  const pool = createPool({
-    connectionString: connectionStringP,
-  });
-
-  function getIpFromRequest (request, sessionIp) {
-    try {
-      var ip = request.headers['x-forwarded-for'] ||
-      request.connection.remoteAddress ||
-      request.socket.remoteAddress ||
-      request.connection.socket.remoteAddress;
-      ip = ip.split(',')[0];
-      ip = ip.split(':').slice(-1); //in case the ip returned in a format: "::ffff:146.xxx.xxx.xxx"
-      return ip;
-    } catch (error) {
-      return sessionIp;
-    }
-  }
-
-  const { name, phonenumber, email, description, country, message, sessionIp } = request.body;
-  const ip = sessionIp || getIpFromRequest(request, sessionIp);
-
-  try {
-    // Execute both tasks in parallel
-    const [insertResult, emailResult] = await Promise.all([
-      pool.sql`INSERT INTO Leads (name, phonenumber, email, description, country, ip) VALUES (${name}, ${phonenumber}, ${email}, ${description}, ${country}, ${ip});`,
-      resend.emails.send({
-        from: `Vortex Admin - ${name} <support@vortexio.tech>`,
-        to: "aviralgupta6@gmail.com",
-        subject: `Submission from ${name}`,
-        html: `<p>Hi Boss,</p><p>Following Data has been received from ${name}. Email: ${email}<br/><strong>message: ${message}</strong></p>`,
-      })
-    ]);
-
-    // Close the pool connection
-    await pool.end();
-
-    // Handle response for successful operations
-    response.status(200).json({
-      leadData: insertResult.data,
-      emailData: emailResult.data,
-    });
-  } catch (error) {
-    // Handle error from any of the operations
-    response.status(400).json({ error });
-  }
-});
 
 
 let nexPersonId = 3;

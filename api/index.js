@@ -27,9 +27,23 @@ app.post("/submit", async (request, response) => {
   const pool = createPool({
     connectionString: connectionStringP,
   });
+  function getIpFromRequest (request, sessionIp) {
+    try {
+      var ip = request.headers['x-forwarded-for'] ||
+      request.connection.remoteAddress ||
+      request.socket.remoteAddress ||
+      request.connection.socket.remoteAddress;
+      ip = ip.split(',')[0];
+      ip = ip.split(':').slice(-1); //in case the ip returned in a format: "::ffff:146.xxx.xxx.xxx"
+      return ip;
+    } catch (error) {
+      return sessionIp;
+    }
+  }
 
-  const { name, phonenumber, email, description, country, message } = request.body;
-  const ip = request.ip;
+  const { name, phonenumber, email, description, country, message, sessionIp } = request.body;
+  const ip = getIpFromRequest(request, sessionIp);
+
 
   try {
     // Execute both tasks in parallel
